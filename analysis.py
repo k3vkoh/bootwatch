@@ -21,9 +21,10 @@ directory = os.path.join(cwd, 'data')
 years = [2015, 2016, 2017, 2018, 2019, 2020, 2021]
 
 brands_gif = os.path.join(cwd, 'brand_movement.gif')
-brands_png = os.path.join(cwd, 'brand_movement.png')
 
 fig = plt.figure(figsize=(7,5))
+ax = plt.subplot(111)
+
 plt.style.use('seaborn-deep')
 
 df = None
@@ -37,29 +38,37 @@ df = pd.read_sql(sql, engine)
 brand_array = np.array(df['brand'])
 brand_unique = np.unique(brand_array)
 
-palette = list(reversed(sns.color_palette("Spectral", 100).as_hex()))
+palette = list(reversed(sns.color_palette("Spectral", len(brand_unique)).as_hex()))
 
 brands = {}
 
 def init():
-	plt.clf()
+	ax.clear()
+	box = ax.get_position()
+	ax.set_position([box.x0 + .04, box.y0, box.width, box.height])
 
 def animate(i):
 
-	plt.clf()
+	y0 = brands['Nike'][i]
+	y1 = brands['Adidas'][i]
+	y2 = brands['Puma'][i]
+	y3 = brands['New Balance'][i]
+	y4 = brands['Mizuno'][i]
+	y5 = brands['Under Armour'][i]
+	y6 = brands['Umbro'][i]
+	y7 = brands['Asics'][i]
+	y8 = brands['None'][i]
 
-	plt.ylabel('# of players')
-	plt.ylabel('year')
-	plt.title('Boot Brands Used by Top 100 Players (2015-2021)')
+	ax.set_title('Top 100 Players Endorsements {}'.format(years[i]))
 
-	for x in range(len(brand_unique)):
-		if brand_unique[x] == 'None':
-			continue
-		temp = brands[brand_unique[x]][:i+1]
-		plt.plot(range(len(temp)), temp, color = palette[x*10])
-		plt.annotate(brand_unique[x], (len(temp)-1, temp[-1]))
+	ax.barh(range(9), sorted([y0,y1,y2,y3,y4,y5,y6,y7,y8]), color=palette)
 
-	plt.xticks(np.arange(i+1), years[:i+1])
+	sorted_brands = sorted(brands.items(), key = lambda x: x[1])
+	tcks = [i[0] for i in sorted_brands]
+
+	plt.yticks(range(9), tcks)
+
+	plt.savefig(os.path.join(cwd, 'brands_{}.png'.format(years[i])))
 
 def get_data_brand(brand, year):
 
@@ -87,10 +96,8 @@ def brand_comparison():
 	ani = FuncAnimation(fig, animate, frames = len(years), interval = 1000, init_func = init, repeat = True)
 
 	with open(brands_gif, 'wb') as gif:
-		writergif = animation.PillowWriter(fps = 1)
+		writergif = animation.PillowWriter(fps = 3)
 		ani.save(gif, writer = writergif)
-
-	plt.savefig(brands_png)
 
 def analyze():
 	brand_comparison()
